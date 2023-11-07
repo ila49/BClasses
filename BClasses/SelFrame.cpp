@@ -1,4 +1,4 @@
-// v.0.6-25.09.23
+// v.0.7-07.11.23
 
 #include "SelFrame.h"
 #include <tchar.h>
@@ -16,20 +16,23 @@ SelFrame::SelFrame()
 		                  0,                // толщина рамки - 1 пиксел
 		                  RGB(0, 255, 0));  // цвет рамки от ПКМ - зелёный
 	tme = { 0,0,0,0 };						// пока не инициализируем
-	LB_status = 0;
-	RB_status = 0;
-	rect = { 0,0,0,0 };						// пока не инициализируем
-	ObjectMode = 1;							// отслеживать и отрисовывать обе КМ
+	LB_status = { 0 };
+	LB_status_pr = 0;
+	RB_status = { 0 };
+	RB_status_pr = { 0 };
+	rect = { 0,0,0,0 };				   // пока не инициализируем
+	ObjectMode = { 1 };				   // отслеживать и отрисовывать обе КМ
 	SkipLBRect = FALSE;
 	LBDisabled = FALSE;
 	SkipRBRect = FALSE;
 	RBDisabled = FALSE;
-	MouseLBX1 = MouseLBY1 = -1;	// положение не определено
-	MouseLBX2 = MouseLBY2 = -1;
-	MouseRBX1 = MouseRBY1 = -1;
-	MouseRBX2 = MouseRBY2 = -1;
-	hw = 0;									// пока не инициализируем
-//	DoNotRedrawNC = FALSE;
+	MouseLBX1 = MouseLBY1 = { -1 };    // положение не определено
+	MouseLBX2 = MouseLBY2 = { -1 };
+	MouseRBX1 = MouseRBY1 = { -1 };
+	MouseRBX2 = MouseRBY2 = { -1 };
+	hw = 0;							   // пока не инициализируем
+	LB_mouseleave = { 0 };
+	RB_mouseleave = { 0 };
 }
 
 void SelFrame::init(HWND HW, SelFrame* SFpointer)
@@ -42,7 +45,6 @@ void SelFrame::init(HWND HW, SelFrame* SFpointer)
 	tme.dwHoverTime = HOVER_DEFAULT;
 }
 
-
 void SelFrame::wm_lbuttondown(int mouseXLB, int mouseYLB)
 {
 	if (LBDisabled || RB_status >= 1) return;
@@ -50,10 +52,11 @@ void SelFrame::wm_lbuttondown(int mouseXLB, int mouseYLB)
 	MouseLBY1 = mouseYLB;
 	MouseLBX2 = -1;			// положение не определено
 	MouseLBY2 = -1;
-
-	LB_status = 1;	// статус ЛКМ - нажата
+	LB_status_pr = LB_status;
+	RB_status_pr = 0;
+	LB_status = 1;	        // статус ЛКМ - нажата
 //-\/ otladka
-	rect = { 4,0,150,160 }; // область вывода координат курсора
+	rect = { 4,0,150,240 }; // область вывода координат курсора
 	InvalidateRect(0, &rect, TRUE);
 //-/\ otladka
 };
@@ -63,9 +66,9 @@ void SelFrame::wm_lbuttonup(int mouseXLB, int mouseYLB)
 	if (LBDisabled || RB_status >= 1) return;
 	MouseLBX2 = mouseXLB;
 	MouseLBY2 = mouseYLB;
-	LB_status = 0;	// статус ЛКМ - отпущена
+    LB_status = 0;
 //-\/ otladka
-	rect = { 4,0,150,160 };
+	rect = { 4,0,150,240 };
 	InvalidateRect(0, &rect, TRUE);
 //-/\ otladka
 };
@@ -77,9 +80,11 @@ void SelFrame::wm_rbuttondown(int mouseXRB, int mouseYRB)
 	MouseRBY1 = mouseYRB;
 	MouseRBX2 = -1;			// положение не определено
 	MouseRBY2 = -1;
+	RB_status_pr = RB_status;
+	LB_status_pr = 0;
 	RB_status = 1;			// статус ПКМ - нажата
 //-\/ otladka
-	rect = { 4,0,150,160 };
+	rect = { 4,0,150,240 };
 	InvalidateRect(0, &rect, TRUE);
 //-/\ otladka
 };
@@ -91,7 +96,7 @@ void SelFrame::wm_rbuttonup(int mouseXRB, int mouseYRB)
 	MouseRBY2 = mouseYRB;
 	RB_status = 0;	        // статус ПКМ - отпущена
 //-\/ otladka
-	rect = { 4,0,150,160 };
+	rect = { 4,0,150,240 };
 	InvalidateRect(0, &rect, TRUE);
 //-/\ otladka
 };
@@ -108,6 +113,10 @@ void SelFrame::wm_paint(HDC hdc)
 	RECT rect6 = { 4,100,150,120 };
 	RECT rect7 = { 4,120,150,140 };
 	RECT rect8 = { 4,140,150,160 };
+	RECT rect9 = { 4,160,150,180 };
+	RECT rect10 = { 4,180,150,200 };
+	RECT rect11 = { 4,200,150,220 };
+	RECT rect12 = { 4,220,150,240 };
 	swprintf(wCh, 100, L"х1 ЛКМ= %d\0", MouseLBX1);
 	DrawText(hdc, wCh, -1, &rect1, DT_LEFT);
 	swprintf(wCh, 100, L"y1 ЛКМ= %d\0", MouseLBY1);
@@ -124,7 +133,14 @@ void SelFrame::wm_paint(HDC hdc)
 	DrawText(hdc, wCh, -1, &rect7, DT_LEFT);
 	swprintf(wCh, 100, L"y2 ПКМ= %d\0", MouseRBY2);
 	DrawText(hdc, wCh, -1, &rect8, DT_LEFT);
-//	DoNotRedrawNC = TRUE;
+	swprintf(wCh, 100, L"статус ЛКМ= %d\0", LB_status);
+	DrawText(hdc, wCh, -1, &rect9, DT_LEFT);
+	swprintf(wCh, 100, L"пр.ст. ЛКМ= %d\0", LB_status_pr);
+	DrawText(hdc, wCh, -1, &rect10, DT_LEFT);
+	swprintf(wCh, 100, L"статус ПКМ= %d\0", RB_status);
+	DrawText(hdc, wCh, -1, &rect11, DT_LEFT);
+	swprintf(wCh, 100, L"пр.ст. ПКМ= %d\0", RB_status_pr);
+	DrawText(hdc, wCh, -1, &rect12, DT_LEFT);
 //*/\ otladka
 // рисуем рамку только когда ЛКМ нажата и нужно отрисовывать рамку
 	if (!LBDisabled && LB_status == 2)
@@ -135,8 +151,8 @@ void SelFrame::wm_paint(HDC hdc)
 			SelectObject(hdc, GetStockObject(NULL_BRUSH));	// рисовать только саму рамку
 			result = Rectangle(hdc, MouseLBX1, MouseLBY1, MouseLBX2, MouseLBY2);
 		}
+		LB_status_pr = 2;
 		LB_status = 1;
-//		DoNotRedrawNC = TRUE;
 	}
 	// рисуем рамку только когда ПКМ нажата и нужно отрисовывать рамку
 	if (!RBDisabled && RB_status == 2)
@@ -147,8 +163,8 @@ void SelFrame::wm_paint(HDC hdc)
 			SelectObject(hdc, GetStockObject(NULL_BRUSH));	// рисовать только саму рамку
 			result = Rectangle(hdc, MouseRBX1, MouseRBY1, MouseRBX2, MouseRBY2);
 		}
+		RB_status_pr = 2;
 		RB_status = 1;
-//		DoNotRedrawNC = TRUE;
 	}
 };
 
@@ -156,6 +172,7 @@ void SelFrame::wm_mousemove(int mouseX, int mouseY)
 {
 	if (!LBDisabled && LB_status == 1)
 	{
+		LB_status_pr = 1;
 		LB_status = 2;	// статус ЛКМ - нажата, нужно отрисовать рамку
 		MouseLBX2 = mouseX;
 		MouseLBY2 = mouseY;
@@ -165,6 +182,7 @@ void SelFrame::wm_mousemove(int mouseX, int mouseY)
 	}
 	if (!RBDisabled && RB_status == 1)
 	{
+		RB_status_pr = 1;
 		RB_status = 2;	// статус ПКМ - нажата, нужно отрисовать рамку
 		MouseRBX2 = mouseX;
 		MouseRBY2 = mouseY;
@@ -178,21 +196,26 @@ void SelFrame::wm_mouseleave()
 {
 	if (!LBDisabled && LB_status >= 1)
 	{
+		LB_mouseleave = 1;  // должно сбрасываться в 0 в алгоритме верхнего уровня
+		RB_status_pr = RB_status;
+		LB_status_pr = LB_status;
 		LB_status = 0;	// выключаем статус "ЛК нажата", даже если она остаётся нажатой
 		rect = { MouseLBX1, MouseLBY1, MouseLBX2, MouseLBY2 };
 		InvalidateRect(0, &rect, TRUE); // перерисовывает область из-под рамки но рамку не рисуем
-//-\/ otladka перерисрвываем область с выводом координат курсора
-		rect = { 4,0,150,160 };
+//-\/ otladka перерисовываем область с выводом координат курсора
+		rect = { 4,0,150,240 };
 		InvalidateRect(0, &rect, TRUE);
 //-/\ otladka
 	}
 	if (!RBDisabled && RB_status >= 1)
 	{
+		RB_mouseleave = 1;	// должно сбрасываться в 0 в алгоритме верхнего уровня
+		RB_status_pr = RB_status;
 		RB_status = 0;	// выключаем статус "ПК нажата", даже если она остаётся нажатой
 		rect = { MouseRBX1, MouseRBY1, MouseRBX2, MouseRBY2 };
 		InvalidateRect(0, &rect, TRUE); // перерисовывает область из-под рамки но рамку не рисуем
-//-\/ otladka перерисрвываем область с выводом координат курсора
-		rect = { 4,0,150,160 };
+//-\/ otladka перерисовываем область с выводом координат курсора
+		rect = { 4,0,150,240 };
 		InvalidateRect(0, &rect, TRUE);
 //-/\ otladka
 	}
@@ -212,7 +235,9 @@ void SelFrame::SetMode(signed char ObjectMode)
 			SkipLBRect = FALSE;
 			SkipRBRect = FALSE;
 			LB_status = 0;
+			LB_status_pr = 0;
 			RB_status = 0;
+			RB_status_pr = 0;
 			break;
 		case -1:	// Обе КМ: только слежение
 			LBDisabled = FALSE;
@@ -220,7 +245,9 @@ void SelFrame::SetMode(signed char ObjectMode)
 			SkipLBRect = TRUE;
 			SkipRBRect = TRUE;
 			LB_status = 0;
+			LB_status_pr = 0;
 			RB_status = 0;
+			RB_status_pr = 0;
 			break;
 		case 0:  	// Обе КМ: не работают
 			LBDisabled = TRUE;
@@ -228,39 +255,47 @@ void SelFrame::SetMode(signed char ObjectMode)
 			SkipLBRect = TRUE;
 			SkipRBRect = TRUE;
 			LB_status = 0;
+			LB_status_pr = 0;
 			RB_status = 0;
+			RB_status_pr = 0;
 			break;
 		case -2:	// ЛКМ: только слежение
 			LBDisabled = FALSE;
 			SkipLBRect = TRUE;
 			LB_status = 0;
+			LB_status_pr = 0;
 			break;
 		case -3:	// ЛКМ: слежение и отрисовка
 			LBDisabled = FALSE;
 			SkipLBRect = FALSE;
 			LB_status = 0;
+			LB_status_pr = 0;
 			break;
 		case -4:	// ЛКМ: не работает
 			LBDisabled = TRUE;
 			LB_status = 0;
+			LB_status_pr = 0;
 			break;
 		case 2:	    // ПКМ: только слежение
 			RBDisabled = FALSE;
 			SkipRBRect = TRUE;
 			RB_status = 0;
+			RB_status_pr = 0;
 			break;
 		case 3:	    // ПКМ: слежение и отрисовка
 			RBDisabled = FALSE;
 			SkipRBRect = FALSE;
 			RB_status = 0;
+			RB_status_pr = 0;
 			break;
 		case 4:	    // ПКМ: не работает
 			RBDisabled = TRUE;
 			RB_status = 0;
+			RB_status_pr = 0;
 			break;
 	}
 //-\/ otladka перерисовываем область с выводом координат курсора
-	rect = { 4,0,150,160 };
+	rect = { 4,0,150,240 };
 	InvalidateRect(0, &rect, TRUE);
 //-/\ otladka
 };

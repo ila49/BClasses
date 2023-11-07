@@ -33,6 +33,18 @@
 #define ID_32789                        32789
 #define ID_32790                        32790
 #define ID_32791                        32791
+#define ID_32792                        32792
+#define ID_32793                        32793
+#define ID_32794                        32794
+#define ID_32795                        32795
+#define ID_32796                        32796
+#define ID_32797                        32797
+#define ID_32798                        32798
+#define ID_32799                        32799
+#define ID_32800                        32800
+#define ID_32801                        32801
+#define ID_32802                        32802
+#define ID_32803                        32803
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -41,7 +53,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        129
-#define _APS_NEXT_COMMAND_VALUE         32792
+#define _APS_NEXT_COMMAND_VALUE         32804
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           110
 #endif

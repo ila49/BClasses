@@ -1,4 +1,4 @@
-// v.0.6-25.09.23
+// v.0.7-07.11.23
 
 #pragma once
 #include <wtypes.h>
@@ -14,7 +14,7 @@ class SelFrame
 
 public:
 	SelFrame* pSF;
-	unsigned char LB_status, RB_status;
+	unsigned char LB_status, LB_status_pr, RB_status, RB_status_pr, LB_mouseleave, RB_mouseleave;
 	int MouseLBX1, MouseLBY1, MouseLBX2, MouseLBY2, MouseRBX1, MouseRBY1, MouseRBX2, MouseRBY2;
 	HWND hw;
 //	BOOL DoNotRedrawNC;

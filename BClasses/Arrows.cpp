@@ -1,4 +1,4 @@
-// v.0.2-12.10.23
+// v.0.7-07.11.23
 
 #include "Arrows.h"
 #include "SelFrame.h"
@@ -14,10 +14,13 @@
 
 Arrows::Arrows()	// конструктор класса
 {
-	mode.type = 0;
-	mode.button = 0;
-	mode.style = 1;
-	alf_r = 0.0;
+	mode.type = { 0 };
+	mode.button = { 0 };
+	mode.style = { 1 };
+	mode.type2 = { 0 };
+	mode.type2_LB = { 0 };
+	mode.type2_RB = { 0 };
+	alf_r = { 0.0 };
 	fix_r = { 0.0 };
 	dx = { 0.0 };
 	dy = { 0.0 };
@@ -179,8 +182,8 @@ int Arrows::test_2(unsigned short l, unsigned short w, unsigned short s, unsigne
 int Arrows::calc_2(unsigned int buf_N, int x1, int y1, int x2, int y2, unsigned short l, unsigned short w,
 				   unsigned short s, unsigned short b, unsigned short L_fade)
 {	// buf_N - начальный индекс в буфере координат
-	// L_fade - дина стрелки в пикселах, меньше которой пропроцилнально уменьшать длину и ширину усов (если =0, то не
-	// уменьшать)
+	// L_fade - длина стрелки в пикселах, меньше которой пропроцилнально уменьшать длину и ширину усов (если =0, то не
+	//  уменьшать)
 	// s - ширина стрелки в пикселах
 	// l - длина усов стрелки в пикселах
 	// b - основание усов стрелки в пикселах
@@ -272,75 +275,34 @@ int Arrows::wm_paint(HDC hdc, SelFrame* pSF, int* pbuf, unsigned int buf, unsign
 //  расчитанные данные (при других mode.type эта переменная не имеет значения); (стрелка пропадает сразу же после отпускания ЛКМ)
 	if (mode.type == 0) return 0;
 //	if (x1 < 0 || y1 < 0 || x2 < 0 || y2 < 0) return -1; // стрелку невозможно нарисовать, т.к. одна из координат не определена
-	if (mode.type == 1) // только рисуем стрелки из пула буферов
+	else if (mode.type == 1) // только рисуем стрелки из пула буферов
 	{
 		for (int i = 1; i <= pbuf[0]; ++i)
 		{
-			if (pbuf[i] < 0) draw2(hdc, -pbuf[i]);	// рисуем объёмную стрелку
-			else draw1(hdc, pbuf[i]);				// рисуем плоскую стрелку
+			if (pbuf[i] < 0) draw2(hdc, -pbuf[i]);	    // рисуем объёмную стрелку
+			else draw1(hdc, pbuf[i]);				    // рисуем плоскую стрелку
 		}
 		return 0;
 	}
-	if (mode.type == 2)
+	else if (mode.type == 2)
 	{
-		if (mode.button == 1 && pSF->LB_status == 1)	// работаем с ЛКМ
+		if (mode.button == 1 || mode.button == 3)	    // работаем с ЛКМ или с обеими КМ
 		{
-			int x1 = pSF->MouseLBX1;
-			int y1 = pSF->MouseLBY1;
-			int x2 = pSF->MouseLBX2;
-			int y2 = pSF->MouseLBY2;
-			if (x1 < 0 || y1 < 0 || x2 < 0 || y2 < 0) return -1; // стрелку невозможно нарисовать, т.к. одна из координат не определена
-			switch (mode.style) 
+
+			if (mode.type2_LB == 2 && pSF->LB_mouseleave == 1) pSF->LB_mouseleave = 0;	   // режим В
+			else if (mode.type2_LB >= 1 && pSF->LB_status == 0 && pSF->LB_status_pr >= 1)  // режим Б
 			{
-			case 1:		// рисуем плоскую стрелку
-				res = calc_1(buf * 8, x1, y1, x2, y2, l, w, L_fade);
-				if (res == 0)
+				switch (mode.style)
 				{
-					draw1(hdc, buf);
-					return res;
+				case 1:
+					draw1(hdc, buf);	 // рисуем плоскую стрелку
+					break;
+				case 2:
+					draw2(hdc, buf);	 // рисуем объёмную стрелку
+					break;
 				}
-				break;
-			case 2:		// рисуем объёмную стрелку
-				res = calc2(buf * 8, x1, y1, x2, y2, l, w, s, b, L_fade);
-				if (res == 0)
-				{
-					draw2(hdc, buf);
-					return res;
-				}
-				break;
 			}
-		}
-		else if (mode.button == 2 && pSF->RB_status == 1) // работаем с ПКМ
-		{
-			int x1 = pSF->MouseRBX1;
-			int y1 = pSF->MouseRBY1;
-			int x2 = pSF->MouseRBX2;
-			int y2 = pSF->MouseRBY2;
-			if (x1 < 0 || y1 < 0 || x2 < 0 || y2 < 0) return -1; // стрелку невозможно нарисовать, т.к. одна из координат не определена
-			res = calc2(buf * 8, x1, y1, x2, y2, l, w, s, b, L_fade);
-			switch (mode.style)
-			{
-			case 1:		// рисуем плоскую стрелку
-				res = calc_1(buf * 8, x1, y1, x2, y2, l, w, L_fade);
-				if (res == 0)
-				{
-					draw1(hdc, buf);
-					return res;
-				}
-				break;
-			case 2:		// рисуем объёмную стрелку
-				res = calc2(buf * 8, x1, y1, x2, y2, l, w, s, b, L_fade);
-				if (res == 0)
-				{
-					draw2(hdc, buf);
-					return res;
-				}
-				break;
-			}
-		}
-		else if (mode.button == 3) // работаем с обеими КМ
-		{
-			if (pSF->LB_status == 1)
+			else if (pSF->LB_status == 1) // работаем с ЛКМ
 			{
 				int x1 = pSF->MouseLBX1;
 				int y1 = pSF->MouseLBY1;
@@ -349,7 +311,7 @@ int Arrows::wm_paint(HDC hdc, SelFrame* pSF, int* pbuf, unsigned int buf, unsign
 				if (x1 < 0 || y1 < 0 || x2 < 0 || y2 < 0) return -1; // стрелку невозможно нарисовать, т.к. одна из координат не определена
 				switch (mode.style)
 				{
-				case 1:		// рисуем плоскую стрелку
+				case 1:		             // рисуем плоскую стрелку
 					res = calc_1(buf * 8, x1, y1, x2, y2, l, w, L_fade);
 					if (res == 0)
 					{
@@ -357,7 +319,7 @@ int Arrows::wm_paint(HDC hdc, SelFrame* pSF, int* pbuf, unsigned int buf, unsign
 						return res;
 					}
 					break;
-				case 2:		// рисуем объёмную стрелку
+				case 2:		             // рисуем объёмную стрелку
 					res = calc2(buf * 8, x1, y1, x2, y2, l, w, s, b, L_fade);
 					if (res == 0)
 					{
@@ -366,20 +328,32 @@ int Arrows::wm_paint(HDC hdc, SelFrame* pSF, int* pbuf, unsigned int buf, unsign
 					}
 					break;
 				}
+
 			}
-			else if (pSF->RB_status == 1)
+		}
+		if (mode.button == 2 || mode.button == 3)       // работаем с ПКМ или с обеими КМ
+		{
+			if (mode.type2_RB == 2 && pSF->RB_mouseleave == 1) pSF->RB_mouseleave = 0;	    // режим В
+			else if (mode.type2_RB >= 1 && pSF->RB_status == 0 && pSF->RB_status_pr >= 1)   // режим Б
+			{
+				switch (mode.style)
+				{
+				case 1:
+					draw1(hdc, buf);	// рисуем плоскую стрелку
+					break;
+				case 2:
+					draw2(hdc, buf);	// рисуем объёмную стрелку
+					break;
+				}
+			}
+			else if (pSF->RB_status == 1) // работаем с ПКМ
 			{
 				int x1 = pSF->MouseRBX1;
 				int y1 = pSF->MouseRBY1;
 				int x2 = pSF->MouseRBX2;
 				int y2 = pSF->MouseRBY2;
 				if (x1 < 0 || y1 < 0 || x2 < 0 || y2 < 0) return -1; // стрелку невозможно нарисовать, т.к. одна из координат не определена
-				//res = calc2(buf * 8, x1, y1, x2, y2, l, w, s, b, L_fade);
-				//if (res == 0)
-				//{
-				//	draw2(hdc, buf);
-				//	return res;
-				//}
+				res = calc2(buf * 8, x1, y1, x2, y2, l, w, s, b, L_fade);
 				switch (mode.style)
 				{
 				case 1:		// рисуем плоскую стрелку
@@ -399,8 +373,6 @@ int Arrows::wm_paint(HDC hdc, SelFrame* pSF, int* pbuf, unsigned int buf, unsign
 					}
 					break;
 				}
-
-
 			}
 		}
 	}

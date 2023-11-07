@@ -1,5 +1,5 @@
 ﻿// class_SelFrame.cpp : Определяет точку входа для приложения.
-// v.0.6-12.10.23
+// v.0.7-07.11.23
 
 #include "framework.h"
 #include "BClasses.h"
@@ -14,7 +14,10 @@ WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки за�
 WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
 
 int result;
-unsigned char KeepAfterDrawing = { 1 };
+HMENU hmenu;
+DWORD dw;
+long Checked, Unchecked;
+
 //// Создаем единственный объект класса AntiFlicker
 AntiFlicker AF;
 //// Создаем единственный объект класса SelFrame
@@ -22,7 +25,6 @@ SelFrame SF;
 SelFrame* pSF = &SF;
 //// Создаем единственный объект класса Arrows
 Arrows Arrow;   // Пока дезактивирован
-
 
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -40,20 +42,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // TODO: Разместите код здесь.
 
-
-//-\/ test
-    int* one_two_three{ new int[] {1, 2, 3} };      // тест на С++20
-    int ONE = *one_two_three;
-    int TWO = *(one_two_three + 1);
-    int THREE = *(one_two_three + 2);
-    int One = one_two_three[0];
-    int Two = one_two_three[1];
-    int Three = one_two_three[2];
-    delete[] one_two_three;
-    one_two_three = nullptr;
-//-/\ test
-    
-
     // Инициализация глобальных строк
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_CLASSSELFRAME, szWindowClass, MAX_LOADSTRING);
@@ -67,8 +55,78 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CLASSSELFRAME));
 
-    MSG msg;
+    //-\/ test
+    int* one_two_three{ new int[] {1, 2, 3} };      // тест на С++20
+    int ONE = *one_two_three;
+    int TWO = *(one_two_three + 1);
+    int THREE = *(one_two_three + 2);
+    int One = one_two_three[0];
+    int Two = one_two_three[1];
+    int Three = one_two_three[2];
+    delete[] one_two_three;
+    one_two_three = nullptr;
+    //-/\ test
 
+    // начало первоначальной настройки меню
+    hmenu = GetMenu(SF.hw);
+    Checked = MF_BYCOMMAND | MF_CHECKED;
+    Unchecked = MF_BYCOMMAND | MF_UNCHECKED;
+    if (Arrow.mode.type == 0 || Arrow.mode.button == 0) dw = CheckMenuItem(hmenu, ID_32784, Checked);
+    else dw = CheckMenuItem(hmenu, ID_32784, Unchecked);
+    // Стрелки -> Рисовать -> От ЛКМ
+    if (Arrow.mode.type == 2 || Arrow.mode.button == 1) dw = CheckMenuItem(hmenu, ID_32789, Checked);
+    else dw = CheckMenuItem(hmenu, ID_32789, Unchecked);
+    // Стрелки -> Рисовать -> От ПКМ
+    if (Arrow.mode.type == 2 || Arrow.mode.button == 2) dw = CheckMenuItem(hmenu, ID_32790, Checked);
+    else dw = CheckMenuItem(hmenu, ID_32790, Unchecked);
+    // Стрелки -> Рисовать -> От обеих КМ
+    if (Arrow.mode.type == 2 || Arrow.mode.button == 3) dw = CheckMenuItem(hmenu, ID_32791, Checked);
+    else dw = CheckMenuItem(hmenu, ID_32791, Unchecked);
+    // Стрелки -> Плоские
+    if (Arrow.mode.style == 1) dw = CheckMenuItem(hmenu, ID_32785, Checked);
+    else dw = CheckMenuItem(hmenu, ID_32785, Unchecked);
+    // Стрелки -> Объёмные
+    if (Arrow.mode.style == 2) dw = CheckMenuItem(hmenu, ID_32786, Checked);
+    else dw = CheckMenuItem(hmenu, ID_32786, Unchecked);
+    // Стрелки -> Режим А -> Обе КМ
+    if (Arrow.mode.type2_LB == 0 && Arrow.mode.type2_RB == 0) dw = CheckMenuItem(hmenu, ID_32794, Checked);
+    else
+    {
+        dw = CheckMenuItem(hmenu, ID_32794, Unchecked);
+        // Стрелки -> Режим А -> ЛКМ
+        if (Arrow.mode.type2_LB == 0) dw = CheckMenuItem(hmenu, ID_32795, Checked);
+        else dw = CheckMenuItem(hmenu, ID_32795, Unchecked);
+        // Стрелки -> Режим А -> ПКМ
+        if (Arrow.mode.type2_RB == 0) dw = CheckMenuItem(hmenu, ID_32796, Checked);
+        else dw = CheckMenuItem(hmenu, ID_32796, Unchecked);
+    }
+    // Стрелки -> Режим Б -> Обе КМ
+    if (Arrow.mode.type2_LB == 1 && Arrow.mode.type2_RB == 1) dw = CheckMenuItem(hmenu, ID_32797, Checked);
+    else
+    {
+        dw = CheckMenuItem(hmenu, ID_32797, Unchecked);
+        // Стрелки -> Режим Б -> ЛКМ
+        if (Arrow.mode.type2_LB == 1) dw = CheckMenuItem(hmenu, ID_32798, Checked);
+        else dw = CheckMenuItem(hmenu, ID_32798, Unchecked);
+        // Стрелки -> Режим Б -> ПКМ
+        if (Arrow.mode.type2_RB == 1) dw = CheckMenuItem(hmenu, ID_32799, Checked);
+        else dw = CheckMenuItem(hmenu, ID_32799, Unchecked);
+    }
+    // Стрелки -> Режим В -> Обе КМ
+    if (Arrow.mode.type2_LB == 2 && Arrow.mode.type2_RB == 2) dw = CheckMenuItem(hmenu, ID_32801, Checked);
+    else
+    {
+        dw = CheckMenuItem(hmenu, ID_32801, Unchecked);
+        // Стрелки -> Режим В -> ЛКМ
+        if (Arrow.mode.type2_LB == 2) dw = CheckMenuItem(hmenu, ID_32802, Checked);
+        else dw = CheckMenuItem(hmenu, ID_32802, Unchecked);
+        // Стрелки -> Режим В -> ПКМ
+        if (Arrow.mode.type2_RB == 2) dw = CheckMenuItem(hmenu, ID_32803, Checked);
+        else dw = CheckMenuItem(hmenu, ID_32803, Unchecked);
+    }
+    // конец первоначальной настройки меню
+
+    MSG msg;
     // Цикл основного сообщения:
     while (GetMessage(&msg, nullptr, 0, 0))
     {
@@ -135,10 +193,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    SF.init(hWnd, pSF);   // инициируем объект
 
-//-\/ otladka
+//*\/ otladka
    // проверяем параметры объёмной стрелки  на корректность
    result = Arrow.test_2(60, 30, 60, 40); // возвращает 0 если параметры заданы корректно, 1...5 - если некорректно
-//-/\ otladka
+//*/\ otladka
 
    return TRUE;
 }
@@ -232,24 +290,164 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             //    break;
             case 32784: // Не рисовать стрелки
                 Arrow.mode.type = 0;
+                dw = CheckMenuItem(hmenu, ID_32784, Checked);
+                dw = CheckMenuItem(hmenu, ID_32789, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32790, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32791, Unchecked);
                 break;
             case 32785: // Рисовать плоскую стрелку
                 Arrow.mode.style = 1;
+                dw = CheckMenuItem(hmenu, ID_32785, Checked);
+                dw = CheckMenuItem(hmenu, ID_32786, Unchecked);
                 break;
             case 32786: // Рисовать объёмную стрелку
                 Arrow.mode.style = 2;
+                dw = CheckMenuItem(hmenu, ID_32786, Checked);
+                dw = CheckMenuItem(hmenu, ID_32785, Unchecked);
                 break;
             case 32789: // Рисовать стрелку от ЛКМ
-                Arrow.mode.type = 2;    //?
+                Arrow.mode.type = 2;
                 Arrow.mode.button = 1;
+                dw = CheckMenuItem(hmenu, ID_32789, Checked);
+                dw = CheckMenuItem(hmenu, ID_32784, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32790, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32791, Unchecked);
                 break;
             case 32790: // Рисовать стрелку от ПКМ
-                Arrow.mode.type = 2;    //?
+                Arrow.mode.type = 2;
                 Arrow.mode.button = 2;
+                dw = CheckMenuItem(hmenu, ID_32790, Checked);
+                dw = CheckMenuItem(hmenu, ID_32784, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32789, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32791, Unchecked);
                 break;
-            case 32791: // Рисовать стрелку от обеих КМ
-                Arrow.mode.type = 2;    //?
+            case 32791: // Рисовать стрелки от обеих КМ
+                Arrow.mode.type = 2;
                 Arrow.mode.button = 3;
+                dw = CheckMenuItem(hmenu, ID_32791, Checked);
+                dw = CheckMenuItem(hmenu, ID_32784, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32789, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32790, Unchecked);
+                break;
+            case 32794: // Режим А для обеих КМ
+                Arrow.mode.type2_LB = 0;
+                Arrow.mode.type2_RB = 0;
+                dw = CheckMenuItem(hmenu, ID_32794, Checked);
+                dw = CheckMenuItem(hmenu, ID_32795, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32796, Unchecked);
+                // деактивировать всё в режиме Б и В
+                dw = CheckMenuItem(hmenu, ID_32797, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32798, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32799, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32801, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32802, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32803, Unchecked);
+                break;
+            case 32795: // Режим А для ЛКМ
+                Arrow.mode.type2_LB = 0;
+                dw = CheckMenuItem(hmenu, ID_32795, Checked);
+                dw = CheckMenuItem(hmenu, ID_32794, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32796, Unchecked);
+                // деактивировать всё в режиме Б и В
+                dw = CheckMenuItem(hmenu, ID_32797, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32798, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32799, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32801, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32802, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32803, Unchecked);
+                break;
+            case 32796: // Режим А для ЛКМ
+                Arrow.mode.type2_LB = 0;
+                dw = CheckMenuItem(hmenu, ID_32796, Checked);
+                dw = CheckMenuItem(hmenu, ID_32794, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32795, Unchecked);
+                // деактивировать всё в режиме Б и В
+                dw = CheckMenuItem(hmenu, ID_32797, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32798, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32799, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32801, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32802, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32803, Unchecked);
+                break;
+            case 32797: // Режим Б для обеих КМ
+                Arrow.mode.type2_LB = 1;
+                Arrow.mode.type2_RB = 1;
+                dw = CheckMenuItem(hmenu, ID_32797, Checked);
+                dw = CheckMenuItem(hmenu, ID_32798, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32799, Unchecked);
+                // деактивировать всё в режиме А и В
+                dw = CheckMenuItem(hmenu, ID_32794, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32795, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32796, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32801, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32802, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32803, Unchecked);
+                break;
+            case 32798: // Режим Б для ЛКМ
+                Arrow.mode.type2_LB = 1;
+                dw = CheckMenuItem(hmenu, ID_32797, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32798, Checked);
+                dw = CheckMenuItem(hmenu, ID_32799, Unchecked);
+                // деактивировать всё в режиме А и В
+                dw = CheckMenuItem(hmenu, ID_32794, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32795, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32796, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32801, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32802, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32803, Unchecked);
+                break;
+            case 32799: // Режим Б для ПКМ
+                Arrow.mode.type2_RB = 1;
+                dw = CheckMenuItem(hmenu, ID_32797, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32798, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32799, Checked);
+                // деактивировать всё в режиме А и В
+                dw = CheckMenuItem(hmenu, ID_32794, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32795, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32796, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32801, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32802, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32803, Unchecked);
+                break;
+            case 32801: // Режим В для обеих КМ
+                Arrow.mode.type2_LB = 2;
+                Arrow.mode.type2_RB = 2;
+                dw = CheckMenuItem(hmenu, ID_32801, Checked);
+                dw = CheckMenuItem(hmenu, ID_32802, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32803, Unchecked);
+                // деактивировать всё в режиме А и Б
+                dw = CheckMenuItem(hmenu, ID_32794, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32795, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32796, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32797, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32798, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32799, Unchecked);
+                break;
+            case 32802: // Режим В для ЛКМ
+                Arrow.mode.type2_LB = 2;
+                dw = CheckMenuItem(hmenu, ID_32802, Checked);
+                dw = CheckMenuItem(hmenu, ID_32801, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32803, Unchecked);
+                // деактивировать всё в режиме А и Б
+                dw = CheckMenuItem(hmenu, ID_32794, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32795, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32796, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32797, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32798, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32799, Unchecked);
+                break;
+            case 32803: // Режим В для ПКМ
+                Arrow.mode.type2_RB = 2;
+                dw = CheckMenuItem(hmenu, ID_32803, Checked);
+                dw = CheckMenuItem(hmenu, ID_32801, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32802, Unchecked);
+                // деактивировать всё в режиме А и Б
+                dw = CheckMenuItem(hmenu, ID_32794, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32795, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32796, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32797, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32798, Unchecked);
+                dw = CheckMenuItem(hmenu, ID_32799, Unchecked);
                 break;
 
             case IDM_ABOUT:
@@ -289,7 +487,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                                        // 
 //            Arrow.mode.type = 0;    // не рисуем стрелки
 //            Arrow.mode.type = 1;    // рисуем стрелки из буферов (для этого передаём управляющий массив pool)
-//            Arrow.mode.type = 2;    // рисуем стрелки при зажатой кнопкой мыши (ЛКМ или ПКМ)
+//            Arrow.mode.type = 2;    // рисуем стрелки при зажатой кнопке мыши (ЛКМ или ПКМ)
 //            Arrow.mode.button = 1;  // рисуем от ЛКМ
 //            Arrow.mode.button = 2;  // рисуем от ПКМ
 //            Arrow.mode.type = 2;
@@ -332,12 +530,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 
     default:
-
-        //if (message == WM_NCPAINT)
-        //{
-        //    int A = 1;
-        //}
-
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
     return 0;

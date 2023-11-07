@@ -1,4 +1,4 @@
-// v.0.2-12.10.23
+// v.0.7-07.11.23
 
 #pragma once
 #include <math.h>
@@ -21,6 +21,9 @@ public:
 		short type;
 		short button;
 		short style;
+		short type2;
+		short type2_LB;
+		short type2_RB;
 	} mode;
 	POINT p[8];
 	int res;
